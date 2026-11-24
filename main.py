@@ -153,6 +153,13 @@ def main():
         handle.flush()
         os.fsync(handle.fileno())
     os.replace(tmp_path, target)
+    # Verify the output was fully written: a short or corrupted write
+    # must fail loudly instead of publishing a truncated image.
+    with open(target, "rb") as handle:
+        written = handle.read()
+    if written != data:
+        fail("output %s does not match entry.png (%d bytes written, %d expected)"
+             % (target, len(written), len(data)))
     print("wrote %s (%s, %dx%d, %d bytes) to %s"
           % (target, kind, WANTED_WIDTH, WANTED_HEIGHT, len(data), target))
 
